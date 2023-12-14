@@ -83,13 +83,14 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
 
     profile_out = Flatten(name="logits_profile_predictions")(prof)
 
-    gap_combined_conv = GlobalAvgPool1D(name='gap')(x) # acronym - gapcc
+    # gap_combined_conv = GlobalAvgPool1D(name='gap')(x) # acronym - gapcc
 
-    # Step 2.3 Dense layer to predict final counts
-    count_out = Dense(num_tasks, name="logcount_predictions")(gap_combined_conv)
+    # # Step 2.3 Dense layer to predict final counts
+    # count_out = Dense(num_tasks, name="logcount_predictions")(gap_combined_conv)
 
     # instantiate keras Model with inputs and outputs
-    model=Model(inputs=[inp],outputs=[profile_out, count_out])
+    # model=Model(inputs=[inp],outputs=[profile_out, count_out])
+    model=Model(inputs=[inp],outputs=[profile_out])
 
     model.compile(optimizer=Adam(learning_rate=args.learning_rate),
                     loss=[multinomial_nll,'mse'],

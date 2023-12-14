@@ -78,13 +78,15 @@ def bpnet_model(filters, n_dil_layers, sequence_len, out_pred_len):
     # Branch 2. Counts prediction
     # Step 2.1 - Global average pooling along the "length", the result
     #            size is same as "filters" parameter to the BPNet function
-    gap_combined_conv = GlobalAvgPool1D(name='gap')(x) # acronym - gapcc
+    # gap_combined_conv = GlobalAvgPool1D(name='gap')(x) # acronym - gapcc
 
-    # Step 2.3 Dense layer to predict final counts
-    count_out = Dense(num_tasks, name="wo_bias_bpnet_logcount_predictions")(gap_combined_conv)
+    # # Step 2.3 Dense layer to predict final counts
+    # count_out = Dense(num_tasks, name="wo_bias_bpnet_logcount_predictions")(gap_combined_conv)
 
     # instantiate keras Model with inputs and outputs
-    model=Model(inputs=[inp],outputs=[profile_out, count_out], name="model_wo_bias")
+    # model=Model(inputs=[inp],outputs=[profile_out, count_out], name="model_wo_bias")
+    model=Model(inputs=[inp],outputs=[profile_out], name="model_wo_bias")
+    #No bias to remove with methylation data (theoretically)
 
     return model
 
@@ -100,7 +102,7 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
     out_pred_len=int(model_params['outputlen'])
 
 
-    bias_model = load_pretrained_bias(bias_model_path)
+    # bias_model = load_pretrained_bias(bias_model_path)
     bpnet_model_wo_bias = bpnet_model(filters, n_dil_layers, sequence_len, out_pred_len)
 
     #read in arguments
@@ -112,24 +114,29 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
     inp = Input(shape=(sequence_len, 4),name='sequence')    
 
     ## get bias output
-    bias_output=bias_model(inp)
+    # bias_output=bias_model(inp)
     ## get wo bias output
     output_wo_bias=bpnet_model_wo_bias(inp)
-    assert(len(bias_output[1].shape)==2) # bias model counts head is of incorrect shape (None,1) expected
-    assert(len(bias_output[0].shape)==2) # bias model profile head is of incorrect shape (None,out_pred_len) expected
+    # assert(len(bias_output[1].shape)==2) # bias model counts head is of incorrect shape (None,1) expected
+    # assert(len(bias_output[0].shape)==2) # bias model profile head is of incorrect shape (None,out_pred_len) expected
     assert(len(output_wo_bias[0].shape)==2)
-    assert(len(output_wo_bias[1].shape)==2)
-    assert(bias_output[1].shape[1]==1) #  bias model counts head is of incorrect shape (None,1) expected
-    assert(bias_output[0].shape[1]==out_pred_len) # bias model profile head is of incorrect shape (None,out_pred_len) expected
+    # assert(len(output_wo_bias[1].shape)==2)
+    # assert(bias_output[1].shape[1]==1) #  bias model counts head is of incorrect shape (None,1) expected
+    # assert(bias_output[0].shape[1]==out_pred_len) # bias model profile head is of incorrect shape (None,out_pred_len) expected
 
 
-    profile_out = Add(name="logits_profile_predictions")([output_wo_bias[0],bias_output[0]])
-    concat_counts = Concatenate(axis=-1)([output_wo_bias[1], bias_output[1]])
-    count_out = Lambda(lambda x: tf.math.reduce_logsumexp(x, axis=-1, keepdims=True),
-                        name="logcount_predictions")(concat_counts)
+    # profile_out = Add(name="logits_profile_predictions")([output_wo_bias[0],bias_output[0]])
+    # concat_counts = Concatenate(axis=-1)([output_wo_bias[1], bias_output[1]])
+    # count_out = Lambda(lambda x: tf.math.reduce_logsumexp(x, axis=-1, keepdims=True),
+    #                     name="logcount_predictions")(concat_counts)
+
+    profile_out = output_wo_bias[0] #Add(name="logits_profile_predictions")([output_wo_bias[0],bias_output[0]])
+
 
     # instantiate keras Model with inputs and outputs
-    model=Model(inputs=[inp],outputs=[profile_out, count_out])
+    # model=Model(inputs=[inp],outputs=[profile_out, count_out])
+    model=Model(inputs=[inp],outputs=[profile_out])
+
 
     model.compile(optimizer=Adam(learning_rate=args.learning_rate),
                     loss=[multinomial_nll,'mse'],
@@ -141,6 +148,7 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
 def save_model_without_bias(model, output_prefix):
     model_wo_bias = model.get_layer("model_wo_bias").output
     #counts_output_without_bias = model.get_layer("wo_bias_bpnet_logcount_predictions").output
-    model_without_bias = Model(inputs=model.get_layer("model_wo_bias").inputs,outputs=[model_wo_bias[0], model_wo_bias[1]])
+    # model_without_bias = Model(inputs=model.get_layer("model_wo_bias").inputs,outputs=[model_wo_bias[0], model_wo_bias[1]])
+    model_without_bias = Model(inputs=model.get_layer("model_wo_bias").inputs,outputs=[model_wo_bias[0]])    
     print('save model without bias') 
     model_without_bias.save(output_prefix+"_nobias.h5")
