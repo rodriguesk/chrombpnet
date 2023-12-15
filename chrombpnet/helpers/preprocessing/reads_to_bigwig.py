@@ -79,38 +79,40 @@ def generate_bigwig(input_bam_file, input_fragment_file, input_tagalign_file, ou
 
 def main(args):
 
-    plus_shift, minus_shift = args.plus_shift, args.minus_shift
+# Don't shift methylation data!
+    # plus_shift, minus_shift = args.plus_shift, args.minus_shift
 
-    if (plus_shift is None) or (minus_shift is None):
-        # TODO: validate inputs, check bedtools and ucsc tools
-        if args.data_type=="ATAC":
-            ref_motifs_file = args.ATAC_ref_path
-            if ref_motifs_file is None:
-                ref_motifs_file=get_default_data_path(DefaultDataFile.atac_ref_motifs)
-        elif args.data_type=="DNASE":
-            ref_motifs_file = args.DNASE_ref_path
-            if ref_motifs_file is None:
-                ref_motifs_file =  get_default_data_path(DefaultDataFile.dnase_ref_motifs)
+    # if (plus_shift is None) or (minus_shift is None):
+    #     # TODO: validate inputs, check bedtools and ucsc tools
+    #     if args.data_type=="ATAC":
+    #         ref_motifs_file = args.ATAC_ref_path
+    #         if ref_motifs_file is None:
+    #             ref_motifs_file=get_default_data_path(DefaultDataFile.atac_ref_motifs)
+    #     elif args.data_type=="DNASE":
+    #         ref_motifs_file = args.DNASE_ref_path
+    #         if ref_motifs_file is None:
+    #             ref_motifs_file =  get_default_data_path(DefaultDataFile.dnase_ref_motifs)
     
-        print("Estimating enzyme shift in input file")
-        plus_shift, minus_shift = auto_shift_detect.compute_shift(args.input_bam_file,
-                args.input_fragment_file,
-                args.input_tagalign_file,
-                args.num_samples,
-                args.genome,
-                args.data_type,
-                ref_motifs_file)
+    #     print("Estimating enzyme shift in input file")
+    #     plus_shift, minus_shift = auto_shift_detect.compute_shift(args.input_bam_file,
+    #             args.input_fragment_file,
+    #             args.input_tagalign_file,
+    #             args.num_samples,
+    #             args.genome,
+    #             args.data_type,
+    #             ref_motifs_file)
     
-        print("Current estimated shift: {:+}/{:+}".format(plus_shift, minus_shift))
+    #     print("Current estimated shift: {:+}/{:+}".format(plus_shift, minus_shift))
 
-    else:
-        print("The specified shift is: {:+}/{:+}".format(plus_shift, minus_shift))
+    # else:
+    #     print("The specified shift is: {:+}/{:+}".format(plus_shift, minus_shift))
 
-    # computing additional shifting to apply
-    if args.data_type=="ATAC":
-        plus_shift_delta, minus_shift_delta = 4-plus_shift, -4-minus_shift
-    elif args.data_type=="DNASE":
-        plus_shift_delta, minus_shift_delta = -plus_shift, 1-minus_shift
+    # # computing additional shifting to apply
+    # if args.data_type=="ATAC":
+    #     plus_shift_delta, minus_shift_delta = 4-plus_shift, -4-minus_shift
+    # elif args.data_type=="DNASE":
+    #     plus_shift_delta, minus_shift_delta = -plus_shift, 1-minus_shift
+    plus_shift_delta, minus_shift_delta = 0,0
 
     generate_bigwig(args.input_bam_file,
             args.input_fragment_file,
