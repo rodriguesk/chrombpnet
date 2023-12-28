@@ -70,8 +70,8 @@ def predict_on_batch_wrapper(model,test_generator):
     num_batches=len(test_generator)
     profile_probs_predictions = []
     true_counts = []
-    counts_sum_predictions = []
-    true_counts_sum = []
+    #counts_sum_predictions = []
+    #true_counts_sum = []
     coordinates = []
 
     for idx in range(num_batches):
@@ -88,12 +88,12 @@ def predict_on_batch_wrapper(model,test_generator):
         profile_probs_predictions.extend(softmax(preds[0]))
 
         # get counts predictions
-        true_counts_sum.extend(y[1][:,0])
+        #true_counts_sum.extend(y[1][:,0])
         # counts_sum_predictions.extend(preds[1][:,0])
         coordinates.extend(coords)
 
     # return np.array(true_counts), np.array(profile_probs_predictions), np.array(true_counts_sum), np.array(counts_sum_predictions), np.array(coordinates)
-    return np.array(true_counts), np.array(profile_probs_predictions), np.array(true_counts_sum), np.array(coordinates)
+    return np.array(true_counts), np.array(profile_probs_predictions), np.array(coordinates)
 
 
 def main(args):
@@ -108,7 +108,7 @@ def main(args):
 
     test_generator = initializers.initialize_generators(args, mode="test", parameters=None, return_coords=True)
     # true_counts, profile_probs_predictions, true_counts_sum, counts_sum_predictions, coordinates = predict_on_batch_wrapper(model, test_generator)
-    true_counts, profile_probs_predictions, true_counts_sum, coordinates = predict_on_batch_wrapper(model, test_generator)
+    true_counts, profile_probs_predictions, coordinates = predict_on_batch_wrapper(model, test_generator)
 
     # generate prediction on test set and store metrics
     # write_predictions_h5py(args.output_prefix, profile_probs_predictions, counts_sum_predictions, coordinates)
