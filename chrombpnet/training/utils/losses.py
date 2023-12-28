@@ -12,9 +12,16 @@ def multinomial_nll(true_counts, logits):
     counts_per_example = tf.reduce_sum(true_counts, axis=-1)
     dist = tfp.distributions.Multinomial(total_count=counts_per_example,
                                          logits=logits)
-    return (-tf.reduce_sum(dist.log_prob(true_counts)) / 
-            tf.cast(tf.shape(true_counts)[0], dtype=tf.float32))
 
+    #compute negatile log-likelihood
+    nll_numerator = -tf.reduce_sum(dist.log_prob(true_counts)) 
+    nll_denominator = tf.cast(tf.shape(true_counts)[0], dtype=tf.float32)
+    #should check the shape of this nll_denominator to confirm it's the correct shape!
+    nll = (nll_numerator / nll_denominator)
+
+    # return (-tf.reduce_sum(dist.log_prob(true_counts)) / 
+    #         tf.cast(tf.shape(true_counts)[0], dtype=tf.float32))
+    return nll
 
 
 

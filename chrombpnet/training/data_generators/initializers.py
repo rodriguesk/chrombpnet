@@ -46,7 +46,7 @@ def fetch_data_and_model_params_based_on_mode(mode, args, parameters, nonpeak_re
     else:
         print("mode not defined - only train, valid, test are allowed")
 
-    return inputlen, outputlen,  nonpeak_regions, negative_sampling_ratio, max_jitter, add_revcomp, shuffle_at_epoch_start
+    return inputlen, outputlen, nonpeak_regions, negative_sampling_ratio, max_jitter, add_revcomp, shuffle_at_epoch_start
 
 
 def get_bed_regions_for_fold_split(bed_regions, mode, splits_dict):

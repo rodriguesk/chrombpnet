@@ -23,6 +23,7 @@ class ChromBPNetBatchGenerator(keras.utils.Sequence):
     This generator randomly crops (=jitter) and revcomps training examples for 
     every epoch, and calls bias model on it, whose outputs (bias profile logits 
     and bias logcounts) are fed as input to the chrombpnet model.
+    This doesn't actualy seem to call bias model on it and doesn't seem to feed bias model outputs as input to the chrombpnet model... 
     """
     def __init__(self, peak_regions, nonpeak_regions, genome_fasta, batch_size, inputlen, outputlen, max_jitter, negative_sampling_ratio, cts_bw_file, add_revcomp, return_coords, shuffle_at_epoch_start):
         """
@@ -101,10 +102,15 @@ class ChromBPNetBatchGenerator(keras.utils.Sequence):
         batch_cts = self.cur_cts[idx*self.batch_size:(idx+1)*self.batch_size]
         batch_coords = self.cur_coords[idx*self.batch_size:(idx+1)*self.batch_size]
 
+        # if self.return_coords:
+        #     return (batch_seq, [batch_cts, np.log(1+batch_cts.sum(-1, keepdims=True))], batch_coords)
+        # else:
+        #     return (batch_seq, [batch_cts, np.log(1+batch_cts.sum(-1, keepdims=True))])
+
         if self.return_coords:
-            return (batch_seq, [batch_cts, np.log(1+batch_cts.sum(-1, keepdims=True))], batch_coords)
+            return (batch_seq, [batch_cts], batch_coords)
         else:
-            return (batch_seq, [batch_cts, np.log(1+batch_cts.sum(-1, keepdims=True))])
+            return (batch_seq, [batch_cts])
 
     def on_epoch_end(self):
         self.crop_revcomp_data()

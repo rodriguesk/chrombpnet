@@ -31,7 +31,7 @@ def bpnet_model(filters, n_dil_layers, sequence_len, out_pred_len):
     num_tasks=1 # not using multi tasking
 
     #define inputs
-    inp = Input(shape=(sequence_len, 4),name='sequence')    
+    inp = Input(shape=(sequence_len, 4), name='sequence')    
 
     # first convolution without dilation
     x = Conv1D(filters,

@@ -193,6 +193,7 @@ def jsd_min_max_bounds(profile):
     uniform_profile = np.ones(len(profile)) * (1.0 / len(profile))
 
     # profile as probabilities
+    #this line has issues with dividing by 0 sometimes! TO DO: Need to fix! 
     profile_prob = profile / np.sum(profile)
 
     # jsd of profile with uniform profile

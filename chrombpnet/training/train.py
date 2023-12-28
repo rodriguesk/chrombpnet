@@ -36,6 +36,7 @@ def fit_and_evaluate(model,train_gen,valid_gen,args,architecture_module):
     #reduce_lr = tfcallbacks.ReduceLROnPlateau(monitor='val_loss',factor=0.4, patience=args.early_stop-2, min_lr=0.00000001)
     cur_callbacks=[checkpointer,earlystopper,csvlogger,history]
 
+    #this step is currently breaking in pipeline for methylbpnet. 
     model.fit(train_gen,
               validation_data=valid_gen,
               epochs=args.epochs,

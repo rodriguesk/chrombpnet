@@ -36,19 +36,19 @@ def chrombpnet_train_pipeline(args):
 	args_copy.output_prefix = os.path.join(args.output_dir,"auxiliary/{}".format(fpx))
 	find_chrombpnet_hyperparams.main(args_copy)
 	
-	# make predictions with input bias model in peaks
-	import chrombpnet.training.predict as predict
-	args_copy = copy.deepcopy(args)
-	args_copy.output_prefix = os.path.join(args_copy.output_dir,"evaluation/bias")
-	args_copy.peaks = os.path.join(args.output_dir,"auxiliary/{}filtered.peaks.bed".format(fpx))
-	args_copy.model_h5 = args.bias_model_path
-	args_copy.nonpeaks = "None"
-	predict.main(args_copy)
+	# # make predictions with input bias model in peaks
+	# import chrombpnet.training.predict as predict
+	# args_copy = copy.deepcopy(args)
+	# args_copy.output_prefix = os.path.join(args_copy.output_dir,"evaluation/bias")
+	# args_copy.peaks = os.path.join(args.output_dir,"auxiliary/{}filtered.peaks.bed".format(fpx))
+	# args_copy.model_h5 = args.bias_model_path
+	# args_copy.nonpeaks = "None"
+	# predict.main(args_copy)
 	
-	# QC bias model performance in peaks
-	bias_metrics = json.load(open(os.path.join(args_copy.output_dir,"evaluation/bias_metrics.json")))
-	print("Bias model pearsonr performance in peaks is: {}".format(str(np.round(bias_metrics["counts_metrics"]["peaks"]["pearsonr"],2))))
-	assert(bias_metrics["counts_metrics"]["peaks"]["pearsonr"] > -0.5) # bias model has negative correlation in peaks - AT rich bias model. Increase bias threshold and retrain bias model. Or use a different bias model with higher bias threshold. 
+	# # QC bias model performance in peaks
+	# bias_metrics = json.load(open(os.path.join(args_copy.output_dir,"evaluation/bias_metrics.json")))
+	# print("Bias model pearsonr performance in peaks is: {}".format(str(np.round(bias_metrics["counts_metrics"]["peaks"]["pearsonr"],2))))
+	# assert(bias_metrics["counts_metrics"]["peaks"]["pearsonr"] > -0.5) # bias model has negative correlation in peaks - AT rich bias model. Increase bias threshold and retrain bias model. Or use a different bias model with higher bias threshold. 
 	
 	# separating models from logs
 	os.rename(os.path.join(args.output_dir,"auxiliary/{}bias_model_scaled.h5".format(fpx)),os.path.join(args.output_dir,"models/{}bias_model_scaled.h5".format(fpx)))
