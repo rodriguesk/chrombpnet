@@ -15,7 +15,8 @@ import json
 
 NARROWPEAK_SCHEMA = ["chr", "start", "end", "1", "2", "3", "4", "5", "6", "summit"]
 
-def write_predictions_h5py(output_prefix, profile, logcts, coords):
+# def write_predictions_h5py(output_prefix, profile, logcts, coords):
+def write_predictions_h5py(output_prefix, profile, coords):
     # open h5 file for writing predictions
     output_h5_fname = "{}_predictions.h5".format(output_prefix)
     h5_file = h5py.File(output_h5_fname, "w")
@@ -42,14 +43,15 @@ def write_predictions_h5py(output_prefix, profile, logcts, coords):
         "profs",
         data=profile,
         dtype=float, compression="gzip")
-    logcounts_dset = pred_group.create_dataset(
-        "logcounts", data=logcts,
-        dtype=float, compression="gzip")
+    # logcounts_dset = pred_group.create_dataset(
+    #     "logcounts", data=logcts,
+    #     dtype=float, compression="gzip")
 
     # close hdf5 file
     h5_file.close()
 
-def compare_with_observed(bigwig, regions_df, regions, outputlen, pred_logits, pred_logcts, output_prefix):
+# def compare_with_observed(bigwig, regions_df, regions, outputlen, pred_logits, pred_logcts, output_prefix):
+def compare_with_observed(bigwig, regions_df, regions, outputlen, pred_logits, output_prefix):
 
 	import chrombpnet.training.metrics as metrics 
 	
@@ -59,23 +61,24 @@ def compare_with_observed(bigwig, regions_df, regions, outputlen, pred_logits, p
 	true_counts = obs_data
 	true_counts_sum = np.log(np.sum(true_counts, axis=-1)+1)
 	profile_probs_predictions = softmax(pred_logits) ##
-	counts_sum_predictions = np.squeeze(pred_logcts) ##
+	# counts_sum_predictions = np.squeeze(pred_logcts) ##
 	coordinates =  [[r[0], r[-1]] for r in regions]
 	
-	write_predictions_h5py(output_prefix, profile_probs_predictions, counts_sum_predictions, coordinates)
-	
+	# write_predictions_h5py(output_prefix, profile_probs_predictions, counts_sum_predictions, coordinates)
+	write_predictions_h5py(output_prefix, profile_probs_predictions, coordinates)
+
 	# store regions, their predictions and corresponding pointwise metrics
 	mnll_pw, mnll_norm, jsd_pw, jsd_norm, jsd_rnd, jsd_rnd_norm, mnll_rnd, mnll_rnd_norm =  metrics.profile_metrics(true_counts,profile_probs_predictions)
 
-	spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum, counts_sum_predictions, output_prefix, "All regions provided")
+	# spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum, counts_sum_predictions, output_prefix, "All regions provided")
 	
 	metrics_dictionary={}
-	metrics_dictionary["counts_metrics"] = {}
+	# metrics_dictionary["counts_metrics"] = {}
 	metrics_dictionary["profile_metrics"] = {}
-	metrics_dictionary["counts_metrics"]["regions"] = {}
-	metrics_dictionary["counts_metrics"]["regions"]["spearmanr"] = spearman_cor
-	metrics_dictionary["counts_metrics"]["regions"]["pearsonr"] = pearson_cor
-	metrics_dictionary["counts_metrics"]["regions"]["mse"] = mse
+	# metrics_dictionary["counts_metrics"]["regions"] = {}
+	# metrics_dictionary["counts_metrics"]["regions"]["spearmanr"] = spearman_cor
+	# metrics_dictionary["counts_metrics"]["regions"]["pearsonr"] = pearson_cor
+	# metrics_dictionary["counts_metrics"]["regions"]["mse"] = mse
 	
 	metrics_dictionary["profile_metrics"]["regions"] = {}
 	metrics_dictionary["profile_metrics"]["regions"]["median_jsd"] = np.nanmedian(jsd_pw)
@@ -144,14 +147,16 @@ def main(args):
         regions_df[regions_used].to_csv(args.output_prefix + "_chrombpnet_nobias_preds.bed", sep="\t", header=False, index=False)
 
 
-        pred_logits_wo_bias, pred_logcts_wo_bias = model_chrombpnet_nb.predict([seqs],
+        # pred_logits_wo_bias, pred_logcts_wo_bias = model_chrombpnet_nb.predict([seqs],
+        pred_logits_wo_bias = model_chrombpnet_nb.predict([seqs],
                                           batch_size = args.batch_size,
                                           verbose=True)
 
         pred_logits_wo_bias = np.squeeze(pred_logits_wo_bias)
 
-
-        bigwig_helper.write_bigwig(softmax(pred_logits_wo_bias) * (np.expand_dims(np.exp(pred_logcts_wo_bias)[:,0],axis=1)), 
+        # bigwig_helper.write_bigwig(softmax(pred_logits_wo_bias) * (np.expand_dims(np.exp(pred_logcts_wo_bias)[:,0],axis=1)), 
+        #not sure what this should be! DO TO: fix this to be something better
+        bigwig_helper.write_bigwig(softmax(pred_logits_wo_bias), 
                                regions, 
                                gs, 
                                args.output_prefix + "_chrombpnet_nobias.bw", 
@@ -161,7 +166,9 @@ def main(args):
 
         if args.bigwig:
         	compare_with_observed(args.bigwig, regions_df, regions, outputlen, 
-        				pred_logits_wo_bias, pred_logcts_wo_bias, args.output_prefix+"_chrombpnet_nobias")
+        				pred_logits_wo_bias, args.output_prefix+"_chrombpnet_nobias")
+                        # pred_logits_wo_bias, pred_logcts_wo_bias, args.output_prefix+"_chrombpnet_nobias")
+
         	
 
     if args.chrombpnet_model:
@@ -183,15 +190,17 @@ def main(args):
             regions_df = regions_df[regions_df['chr'].isin(args.debug_chr)]
             regions = [x for x in regions if x[0]==args.debug_chr]
 
-        pred_logits, pred_logcts = model_chrombpnet.predict([seqs],
+        # pred_logits, pred_logcts = model_chrombpnet.predict([seqs],
+        pred_logits = model_chrombpnet.predict([seqs],
                                           batch_size = args.batch_size,
                                           verbose=True)
 
 
         pred_logits = np.squeeze(pred_logits)
 
-
-        bigwig_helper.write_bigwig(softmax(pred_logits) * (np.expand_dims(np.exp(pred_logcts)[:,0],axis=1)),
+        #TO DO: fix this for methylseq depth counts
+        # bigwig_helper.write_bigwig(softmax(pred_logits) * (np.expand_dims(np.exp(pred_logcts)[:,0],axis=1)),
+        bigwig_helper.write_bigwig(softmax(pred_logits),
                                regions,
                                gs,
                                args.output_prefix + "_chrombpnet.bw",
@@ -201,8 +210,8 @@ def main(args):
 
         if args.bigwig:
         	compare_with_observed(args.bigwig, regions_df, regions, outputlen, 
-        				pred_logits, pred_logcts, args.output_prefix+"_chrombpnet")
-        	
+        				pred_logits, args.output_prefix+"_chrombpnet")
+                        # pred_logits, pred_logcts, args.output_prefix+"_chrombpnet")
 
     if args.bias_model:
         model_bias = load_model_wrapper(model_hdf5=args.bias_model)
@@ -223,13 +232,15 @@ def main(args):
             regions = [x for x in regions if x[0]==args.debug_chr]
 
 
-        pred_bias_logits, pred_bias_logcts = model_bias.predict(seqs,
+        # pred_bias_logits, pred_bias_logcts = model_bias.predict(seqs,
+        pred_bias_logits = model_bias.predict(seqs,
                                           batch_size = args.batch_size,
                                           verbose=True)
 
         pred_bias_logits = np.squeeze(pred_bias_logits)
 
-        bigwig_helper.write_bigwig(softmax(pred_bias_logits) * (np.expand_dims(np.exp(pred_bias_logcts)[:,0],axis=1)), 
+        # bigwig_helper.write_bigwig(softmax(pred_bias_logits) * (np.expand_dims(np.exp(pred_bias_logcts)[:,0],axis=1)), 
+        bigwig_helper.write_bigwig(softmax(pred_bias_logits), 
                                regions, 
                                gs, 
                                args.output_prefix + "_bias.bw", 
@@ -239,7 +250,8 @@ def main(args):
 
         if args.bigwig:
         	compare_with_observed(args.bigwig, regions_df, regions, outputlen, 
-        				pred_bias_logits, pred_bias_logcts, args.output_prefix+"_bias")
+                        pred_bias_logits, args.output_prefix+"_bias")
+                        # pred_bias_logits, pred_bias_logcts, args.output_prefix+"_bias")
         
     
 
