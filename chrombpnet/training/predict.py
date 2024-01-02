@@ -90,6 +90,7 @@ def predict_on_batch_wrapper(model,test_generator):
         # get counts predictions
         #true_counts_sum.extend(y[1][:,0])
         # counts_sum_predictions.extend(preds[1][:,0])
+        
         coordinates.extend(coords)
 
     # return np.array(true_counts), np.array(profile_probs_predictions), np.array(true_counts_sum), np.array(counts_sum_predictions), np.array(coordinates)

@@ -85,7 +85,7 @@ def bpnet_model(filters, n_dil_layers, sequence_len, out_pred_len):
 
     # instantiate keras Model with inputs and outputs
     # model=Model(inputs=[inp],outputs=[profile_out, count_out], name="model_wo_bias")
-    model=Model(inputs=[inp],outputs=[profile_out], name="model_wo_bias")
+    model=Model(inputs=[inp], outputs=profile_out, name="model_wo_bias")
     #No bias to remove with methylation data (theoretically)
 
     return model
@@ -135,7 +135,7 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
 
     # instantiate keras Model with inputs and outputs
     # model=Model(inputs=[inp],outputs=[profile_out, count_out])
-    model=Model(inputs=[inp],outputs=[profile_out])
+    model=Model(inputs=[inp],outputs=profile_out)
 
 
     # model.compile(optimizer=Adam(learning_rate=args.learning_rate),
@@ -143,8 +143,8 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
     #                 loss_weights=[1,counts_loss_weight])
 
     model.compile(optimizer=Adam(learning_rate=args.learning_rate),
-                    loss=[multinomial_nll],
-                    loss_weights=[1])    
+                    loss=multinomial_nll,
+                    loss_weights=1)    
 
     return model 
 
@@ -153,6 +153,6 @@ def save_model_without_bias(model, output_prefix):
     model_wo_bias = model.get_layer("model_wo_bias").output
     #counts_output_without_bias = model.get_layer("wo_bias_bpnet_logcount_predictions").output
     # model_without_bias = Model(inputs=model.get_layer("model_wo_bias").inputs,outputs=[model_wo_bias[0], model_wo_bias[1]])
-    model_without_bias = Model(inputs=model.get_layer("model_wo_bias").inputs,outputs=[model_wo_bias[0]])    
+    model_without_bias = Model(inputs=model.get_layer("model_wo_bias").inputs,outputs=model_wo_bias[0])    
     print('save model without bias') 
     model_without_bias.save(output_prefix+"_nobias.h5")
