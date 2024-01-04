@@ -215,7 +215,7 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
     count_out = Dense(num_tasks, name="logcount_predictions")(gap_combined_conv)
 
     # instantiate keras Model with inputs and outputs
-    model=Model(inputs=[inp],outputs=[profile_out, count_out])
+    model=Model(inputs=[inp],outputs=[profile_out, count_out], name="model_wo_bias")
 
     model.compile(optimizer=Adam(learning_rate=args.learning_rate),
                     loss=[multinomial_nll,'mse'],
