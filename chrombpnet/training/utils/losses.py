@@ -13,26 +13,23 @@ def multinomial_nll(true_percentages, pred_percentages):
 
 	avg_coverage=25
 
-	pre_alpha = np.round(avg_coverage*np.array(true_percentages))
-	pre_beta = np.subtract(avg_coverage, pre_alpha)
+    pre_alpha = tf.round(tf.math.multiply(true_percentages,avg_coverage))
+    pre_beta = tf.subtract(avg_coverage, pre_alpha)
 
-	pre_alpha = np.add(pre_alpha, 0.00001)
-	pre_beta = np.add(pre_beta, 0.00001)
-
-	alpha_true = pre_alpha.tolist()
-	beta_true = pre_beta.tolist()
-
-	pred_percentages = np.array(pred_percentages)
+	alpha_true = tf.add(pre_alpha, 0.00001)
+	beta_true = tf.add(pre_beta, 0.00001)
 
 	#fix percentages that are 0 or 1 to a little more than 0 or a little less than 1.
 	epsilon = 0.0000001
-	zero_indices = pred_percentages == 0
-	one_indices = pred_percentages == 1
-	# Add epsilon to elements that are exactly 0
-	pred_percentages[zero_indices] += epsilon
-	# Subtract epsilon from elements that are exactly 1
-	pred_percentages[one_indices] -= epsilon
 
+    zero_mask = tf.equal(pred_percentages, 0.0)
+    one_mask = tf.equal(pred_percentages, 1.0)
+
+    # Add epsilon to elements that are exactly 0
+    pred_percentages = tf.where(zero_mask, pred_percentages + epsilon, pred_percentages)
+
+    # Subtract epsilon from elements that are exactly 1
+    pred_percentages = tf.where(one_mask, pred_percentages - epsilon, pred_percentages)
 
 	dists = tfp.distributions.Beta(alpha_true, beta_true)
 
