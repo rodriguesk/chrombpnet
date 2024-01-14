@@ -38,12 +38,12 @@ def chrombpnet_train_pipeline(args):
 	
 	# make predictions with input bias model in peaks
 	import chrombpnet.training.predict as predict
-	args_copy = copy.deepcopy(args)
-	args_copy.output_prefix = os.path.join(args_copy.output_dir,"evaluation/bias")
-	args_copy.peaks = os.path.join(args.output_dir,"auxiliary/{}filtered.peaks.bed".format(fpx))
-	args_copy.model_h5 = args.bias_model_path
-	args_copy.nonpeaks = "None"
-	predict.main(args_copy)
+	# args_copy = copy.deepcopy(args)
+	# args_copy.output_prefix = os.path.join(args_copy.output_dir,"evaluation/bias")
+	# args_copy.peaks = os.path.join(args.output_dir,"auxiliary/{}filtered.peaks.bed".format(fpx))
+	# args_copy.model_h5 = args.bias_model_path
+	# args_copy.nonpeaks = "None"
+	# predict.main(args_copy)
 	
 	# QC bias model performance in peaks
 	bias_metrics = json.load(open(os.path.join(args_copy.output_dir,"evaluation/bias_metrics.json")))
