@@ -13,7 +13,7 @@ from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras.models import load_model
 from scipy import nanmean, nanstd
 
-def write_predictions_h5py(output_prefix, profile, logcts, coords):
+def write_predictions_h5py(output_prefix, profile, coords):
     # open h5 file for writing predictions
     output_h5_fname = "{}_predictions.h5".format(output_prefix)
     h5_file = h5py.File(output_h5_fname, "w")
@@ -43,9 +43,9 @@ def write_predictions_h5py(output_prefix, profile, logcts, coords):
         "profs",
         data=profile,
         dtype=float, compression="gzip")
-    logcounts_dset = pred_group.create_dataset(
-        "logcounts", data=logcts,
-        dtype=float, compression="gzip")
+    # logcounts_dset = pred_group.create_dataset(
+    #     "logcounts", data=logcts,
+    #     dtype=float, compression="gzip")
 
     # close hdf5 file
     h5_file.close()
@@ -67,9 +67,10 @@ def softmax(x, temp=1):
 def predict_on_batch_wrapper(model,test_generator):
     num_batches=len(test_generator)
     profile_probs_predictions = []
-    true_counts = []
-    counts_sum_predictions = []
-    true_counts_sum = []
+    # true_counts = []
+    true_percentages = []
+    # counts_sum_predictions = []
+    # true_counts_sum = []
     coordinates = []
 
     for idx in range(num_batches):
@@ -81,16 +82,19 @@ def predict_on_batch_wrapper(model,test_generator):
         #get the model predictions            
         preds=model.predict_on_batch(X)
 
-        # get counts predictions
-        true_counts.extend(y[0])
-        profile_probs_predictions.extend(softmax(preds[0]))
-
         # get profile predictions
-        true_counts_sum.extend(y[1][:,0])
-        counts_sum_predictions.extend(preds[1][:,0])
+        # true_counts.extend(y[0])
+        true_percentages.extend(y[0])
+        # profile_probs_predictions.extend(softmax(preds[0]))
+        profile_probs_predictions.extend(preds[0])
+
+
+        # get counts predictions
+        # true_counts_sum.extend(y[1][:,0])
+        # counts_sum_predictions.extend(preds[1][:,0])
         coordinates.extend(coords)
 
-    return np.array(true_counts), np.array(profile_probs_predictions), np.array(true_counts_sum), np.array(counts_sum_predictions), np.array(coordinates)
+    return np.array(true_percentages), np.array(profile_probs_predictions), np.array(coordinates)
 
 
 def main(args):
@@ -103,22 +107,22 @@ def main(args):
 
 
     test_generator = initializers.initialize_generators(args, mode="test", parameters=None, return_coords=True)
-    true_counts, profile_probs_predictions, true_counts_sum, counts_sum_predictions, coordinates = predict_on_batch_wrapper(model, test_generator)
+    true_percentages, profile_probs_predictions, coordinates = predict_on_batch_wrapper(model, test_generator)
 
 
     # generate prediction on test set and store metrics
-    write_predictions_h5py(args.output_prefix, profile_probs_predictions, counts_sum_predictions, coordinates)
+    write_predictions_h5py(args.output_prefix, profile_probs_predictions, coordinates)
 
     # store regions, their predictions and corresponding pointwise metrics
-    mnll_pw, mnll_norm, jsd_pw, jsd_norm, jsd_rnd, jsd_rnd_norm, mnll_rnd, mnll_rnd_norm =  metrics.profile_metrics(true_counts,profile_probs_predictions)
+    mnll_pw, mnll_norm, jsd_pw, jsd_norm, jsd_rnd, jsd_rnd_norm, mnll_rnd, mnll_rnd_norm =  metrics.profile_metrics(true_percentages,profile_probs_predictions)
 
     # including both metrics    
     if args.peaks != "None" and args.nonpeaks != "None":
-        spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum, counts_sum_predictions,args.output_prefix+"_peaks_and_nonpeaks", "Both peaks and non peaks")
-        metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"] = {}
-        metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"]["spearmanr"] = spearman_cor
-        metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"]["pearsonr"] = pearson_cor
-        metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"]["mse"] = mse
+        # spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum, counts_sum_predictions,args.output_prefix+"_peaks_and_nonpeaks", "Both peaks and non peaks")
+        # metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"] = {}
+        # metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"]["spearmanr"] = spearman_cor
+        # metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"]["pearsonr"] = pearson_cor
+        # metrics_dictionary["counts_metrics"]["peaks_and_nonpeaks"]["mse"] = mse
 
         metrics_dictionary["profile_metrics"]["peaks_and_nonpeaks"] = {}
         metrics_dictionary["profile_metrics"]["peaks_and_nonpeaks"]["median_jsd"] = np.nanmedian(jsd_pw)        
@@ -130,11 +134,11 @@ def main(args):
     # including only nonpeak metrics
     if args.nonpeaks != "None":
         non_peaks_idx = coordinates[:,3] == '0'
-        spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum[non_peaks_idx], counts_sum_predictions[non_peaks_idx],args.output_prefix+"_only_nonpeaks", "Only non peaks")
-        metrics_dictionary["counts_metrics"]["nonpeaks"] = {}
-        metrics_dictionary["counts_metrics"]["nonpeaks"]["spearmanr"] = spearman_cor
-        metrics_dictionary["counts_metrics"]["nonpeaks"]["pearsonr"] = pearson_cor
-        metrics_dictionary["counts_metrics"]["nonpeaks"]["mse"] = mse
+        # spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_percentages_sum[non_peaks_idx], counts_sum_predictions[non_peaks_idx],args.output_prefix+"_only_nonpeaks", "Only non peaks")
+        # metrics_dictionary["counts_metrics"]["nonpeaks"] = {}
+        # metrics_dictionary["counts_metrics"]["nonpeaks"]["spearmanr"] = spearman_cor
+        # metrics_dictionary["counts_metrics"]["nonpeaks"]["pearsonr"] = pearson_cor
+        # metrics_dictionary["counts_metrics"]["nonpeaks"]["mse"] = mse
 
         metrics_dictionary["profile_metrics"]["nonpeaks"] = {}
         metrics_dictionary["profile_metrics"]["nonpeaks"]["median_jsd"] = np.nanmedian(jsd_pw[non_peaks_idx])        
@@ -145,11 +149,11 @@ def main(args):
     # including only peak metrics
     if args.peaks != "None":
         peaks_idx = coordinates[:,3] == '1'
-        spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum[peaks_idx], counts_sum_predictions[peaks_idx],args.output_prefix+"_only_peaks", "Only peaks")
-        metrics_dictionary["counts_metrics"]["peaks"] = {}
-        metrics_dictionary["counts_metrics"]["peaks"]["spearmanr"] = spearman_cor
-        metrics_dictionary["counts_metrics"]["peaks"]["pearsonr"] = pearson_cor
-        metrics_dictionary["counts_metrics"]["peaks"]["mse"] = mse
+        # spearman_cor, pearson_cor, mse = metrics.counts_metrics(true_counts_sum[peaks_idx], counts_sum_predictions[peaks_idx],args.output_prefix+"_only_peaks", "Only peaks")
+        # metrics_dictionary["counts_metrics"]["peaks"] = {}
+        # metrics_dictionary["counts_metrics"]["peaks"]["spearmanr"] = spearman_cor
+        # metrics_dictionary["counts_metrics"]["peaks"]["pearsonr"] = pearson_cor
+        # metrics_dictionary["counts_metrics"]["peaks"]["mse"] = mse
 
         metrics_dictionary["profile_metrics"]["peaks"] = {}
         metrics_dictionary["profile_metrics"]["peaks"]["median_jsd"] = np.nanmedian(jsd_pw[peaks_idx])        
