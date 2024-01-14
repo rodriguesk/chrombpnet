@@ -1,7 +1,5 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
-import numpy as np
-
 
 #from https://github.com/kundajelab/basepair/blob/cda0875571066343cdf90aed031f7c51714d991a/basepair/losses.py#L87
 def multinomial_nll(true_percentages, pred_percentages):
@@ -10,10 +8,19 @@ def multinomial_nll(true_percentages, pred_percentages):
       true_percentages: observed percent methylation values
       pred_percentages: predicted percent methylation values
     """
+    # for example:
+    # true_percentages = tf.constant([100,0,25,26])
+    # pred_percentages = tf.constant([0,100,24,25])
+    
+    #convert percentages to decimal format
+    true_percentages = tf.cast(true_percentages, dtype=tf.float32)
+    pred_percentages = tf.cast(pred_percentages, dtype=tf.float32)
+    true_percentages = true_percentages/100
+    pred_percentages = pred_percentages/100
 
-	avg_coverage=25
+    avg_coverage=25.00
 
-    pre_alpha = tf.round(tf.math.multiply(true_percentages,avg_coverage))
+    pre_alpha = tf.round(tf.math.multiply(true_percentages, avg_coverage))
     pre_beta = tf.subtract(avg_coverage, pre_alpha)
 
 	alpha_true = tf.add(pre_alpha, 0.00001)
@@ -33,9 +40,9 @@ def multinomial_nll(true_percentages, pred_percentages):
 
 	dists = tfp.distributions.Beta(alpha_true, beta_true)
 
-	log_probs=dists.log_prob(pred_percentages)
-	neg_sum_log_probs=-tf.reduce_sum(log_probs)
-	average_NLL=neg_sum_log_probs/tf.cast(tf.shape(true_percentages)[0], dtype=tf.float32)
+	log_probs = dists.log_prob(pred_percentages)
+	neg_sum_log_probs = -tf.reduce_sum(log_probs)
+	average_NLL = neg_sum_log_probs/tf.cast(tf.shape(true_percentages)[0], dtype=tf.float32)
 
 	return(average_NLL)
 
