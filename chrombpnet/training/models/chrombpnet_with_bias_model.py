@@ -117,7 +117,7 @@ def getModelGivenModelOptionsAndWeightInits(args, model_params):
     output_wo_bias=bpnet_model_wo_bias(inp)
     # assert(len(bias_output[1].shape)==2) # bias model counts head is of incorrect shape (None,1) expected
     # assert(len(bias_output[0].shape)==2) # bias model profile head is of incorrect shape (None,out_pred_len) expected
-    assert(len(output_wo_bias[0].shape)==2)
+    assert(len(output_wo_bias[0].shape)==1)
     # assert(len(output_wo_bias[1].shape)==2)
     # assert(bias_output[1].shape[1]==1) #  bias model counts head is of incorrect shape (None,1) expected
     # assert(bias_output[0].shape[1]==out_pred_len) # bias model profile head is of incorrect shape (None,out_pred_len) expected
