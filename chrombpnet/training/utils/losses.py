@@ -15,8 +15,8 @@ def multinomial_nll(true_percentages, pred_percentages):
     #convert percentages to decimal format
     true_percentages = tf.cast(true_percentages, dtype=tf.float32)
     pred_percentages = tf.cast(pred_percentages, dtype=tf.float32)
-    true_percentages = true_percentages/100
-    pred_percentages = pred_percentages/100
+    #true_percentages = true_percentages/100
+    #pred_percentages = pred_percentages/100
 
     avg_coverage=25.00
 

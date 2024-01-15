@@ -73,7 +73,10 @@ def bpnet_model(filters, n_dil_layers, sequence_len, out_pred_len):
     prof = Cropping1D(cropsize,
                 name='wo_bias_bpnet_logitt_before_flatten')(prof_out_precrop)
     
-    profile_out = Flatten(name="wo_bias_bpnet_logits_profile_predictions")(prof)
+    profile_out_pre = Flatten(name="wo_bias_bpnet_logits_profile_predictions_before_sigmoid")(prof)
+    
+    #add sigmoid function (here?) to have values be between 0 to 1 inclusive. Output layer with sigmoid activation
+    profile_out = Dense(num_tasks, activation="sigmoid", name="wo_bias_bpnet_logits_profile_predictions")(profile_out_pre)
 
     # Branch 2. Counts prediction
     # Step 2.1 - Global average pooling along the "length", the result
