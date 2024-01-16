@@ -102,9 +102,9 @@ class ChromBPNetBatchGenerator(keras.utils.Sequence):
         batch_coords = self.cur_coords[idx*self.batch_size:(idx+1)*self.batch_size]
 
         if self.return_coords:
-            return (batch_seq, tf.expand_dims([batch_cts], axis=-1), batch_coords)
+            return (batch_seq, tf.expand_dims([batch_cts/100], axis=-1), batch_coords)
         else:
-            return (batch_seq, tf.expand_dims([batch_cts], axis=-1))
+            return (batch_seq, tf.expand_dims([batch_cts/100], axis=-1))
 
     def on_epoch_end(self):
         self.crop_revcomp_data()
